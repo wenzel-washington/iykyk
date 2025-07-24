@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IYKYK • KICKSTART TRACKER</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --bg: #f0f0f0;
+            --fg: #1a1a1a;
+            --accent: #ffffff;
+            --glass-light: rgba(255, 255, 255, 0.7);
+            --glass-dark: rgba(255, 255, 255, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.8);
+            --text-on-glass: #1a1a1a;
+            --complete: #00ff00;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --radius: 8px;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: var(--bg);
+            color: var(--fg);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Background image */
+        .background-image {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #e0e0e0;
+            background-image: url('https://i.imgur.com/VJLkCAF.png');
+            background-size: contain;
+            background-position: top right;
+            background-repeat: no-repeat;
+            z-index: 0;
+            opacity: 0.9;
+        }
+
+        /* Adjust background on mobile */
+        @media (max-width: 768px) {
+            .background-image {
+                background-position: top center;
+                background-size: cover;
+                opacity: 0.7;
+            }
+        }
+
+        /* Measurement lines - only on desktop */
+        .measurement-line {
+            display: none;
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 15px;
+        }
+
+        /* Content wrapper for 75% width on desktop */
+        .content-wrapper {
+            width: 100%;
+            max-width: 100%;
+            margin-right: auto;
+        }
+
+        @media (min-width: 768px) {
+            .content-wrapper {
+                width: 75%;
+            }
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            padding: 20px;
+            background: var(--glass-light);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow);
+            border-radius: var(--radius);
+        }
+
+        h1 {
+            font-size: clamp(32px, 10vw, 48px);
+            letter-spacing: 0.2em;
+            font-weight: normal;
+            text-transform: uppercase;
+            margin-right: -0.2em; /* Compensate for letter-spacing */
+        }
+
+        .subtitle {
+            font-size: clamp(12px, 3vw, 14px);
+            letter-spacing: 0.15em;
+            opacity: 0.7;
+            text-transform: uppercase;
+            margin-top: 5px;
+            margin-right: -0.15em;
+        }
+
+        /* Progress Section with glassmorphism */
+        .progress-section {
+            background: var(--glass-light);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            padding: 20px;
+            margin-bottom: 25px;
+            position: relative;
+            box-shadow: var(--shadow);
+            border-radius: var(--radius);
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: clamp(12px, 3vw, 14px);
+            letter-spacing: 0.05em;
+            gap: 10px;
+            color: var(--text-on-glass);
+            font-weight: 600;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+            border-radius: calc(var(--radius) / 2);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--fg), var(--text-on-glass));
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            border-radius: calc(var(--radius) / 2);
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 2px;
+            height: 100%;
+            background: var(--complete);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .progress-percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: clamp(18px, 4vw, 20px);
+            font-weight: bold;
+            letter-spacing: 0.1em;
+            color: var(--fg);
+            transition: color 0.3s ease;
+        }
+
+        .progress-percentage.light-text {
+            color: var(--accent);
+        }
+
+        /* Categories with glassmorphism */
+        .category {
+            background: var(--glass-light);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            margin-bottom: 15px;
+            padding: 0;
+            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border-radius: var(--radius);
+        }
+
+        .category:active {
+            transform: scale(0.98);
+        }
+
+        @media (min-width: 768px) {
+            .category:hover {
+                transform: translateX(5px);
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            }
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            color: var(--text-on-glass);
+        }
+
+        .category-title {
+            font-size: clamp(14px, 3.5vw, 18px);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+            font-weight: 600;
+        }
+
+        .category-icon {
+            font-size: clamp(20px, 5vw, 24px);
+            flex-shrink: 0;
+        }
+
+        .category-title-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .category-progress {
+            font-size: clamp(12px, 3vw, 14px);
+            opacity: 0.7;
+            letter-spacing: 0.05em;
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+
+        .tasks {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: var(--glass-dark);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .category.expanded .tasks {
+            max-height: 2000px;
+            transition: max-height 0.5s ease-in;
+        }
+
+        .task {
+            display: flex;
+            align-items: flex-start;
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: background 0.2s;
+            user-select: none;
+            -webkit-user-select: none;
+            color: var(--text-on-glass);
+        }
+
+        .task:active {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        @media (min-width: 768px) {
+            .task:hover {
+                background: rgba(255, 255, 255, 0.1);
+            }
+        }
+
+        .task:last-child {
+            border-bottom: none;
+        }
+
+        .checkbox {
+            width: 22px;
+            height: 22px;
+            min-width: 22px;
+            border: 2px solid var(--text-on-glass);
+            margin-right: 15px;
+            position: relative;
+            transition: all 0.3s;
+            margin-top: 2px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .task.completed .checkbox {
+            background: var(--text-on-glass);
+        }
+
+        .task.completed .checkbox::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--accent);
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .task.completed .task-text {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: clamp(13px, 3.5vw, 14px);
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        /* Gamification */
+        .achievement {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            left: 20px;
+            background: var(--fg);
+            color: var(--accent);
+            padding: 15px 20px;
+            transform: translateY(-100px);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+            font-size: clamp(12px, 3vw, 14px);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border-radius: var(--radius);
+        }
+
+        .achievement.show {
+            transform: translateY(0);
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 40px;
+            padding: 30px 0 20px;
+            border-top: 1px solid var(--fg);
+            font-size: clamp(10px, 2.5vw, 12px);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            opacity: 0.7;
+        }
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            text-align: center;
+        }
+
+        /* Expand/Collapse indicator */
+        .expand-indicator {
+            transition: transform 0.3s;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .category.expanded .expand-indicator {
+            transform: rotate(90deg);
+        }
+
+        /* Desktop optimizations */
+        @media (min-width: 768px) {
+            .container {
+                padding: 40px 20px;
+            }
+
+            header {
+                text-align: right;
+                margin-bottom: 60px;
+            }
+
+            .progress-section {
+                padding: 30px;
+                margin-bottom: 40px;
+            }
+
+            .category {
+                margin-bottom: 30px;
+            }
+
+            .footer-content {
+                flex-direction: row;
+                justify-content: space-between;
+                text-align: left;
+            }
+
+            footer {
+                margin-top: 80px;
+                padding: 40px 0;
+            }
+        }
+
+        /* Large desktop */
+        @media (min-width: 1200px) {
+            .category {
+                padding: 0;
+            }
+
+            .category-header {
+                padding: 20px 30px;
+            }
+
+            .task {
+                padding: 15px 30px;
+            }
+        }
+
+        /* Touch-friendly adjustments */
+        @media (hover: none) and (pointer: coarse) {
+            .category-header, .task {
+                min-height: 48px;
+            }
+        }
+
+        /* Prevent horizontal scroll on small devices */
+        @media (max-width: 360px) {
+            h1 {
+                letter-spacing: 0.1em;
+            }
+            
+            .subtitle {
+                letter-spacing: 0.05em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background image -->
+    <div class="background-image"></div>
+
+    <div class="container">
+        <div class="content-wrapper">
+            <header>
+                <h1>IYKYK</h1>
+                <div class="subtitle">Inner Circle Society • Kickstart Tracker</div>
+            </header>
+
+            <div class="progress-section">
+                <div class="progress-stats">
+                    <span>PROGRESS</span>
+                    <span id="task-count">0 / 0 DONE</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="main-progress"></div>
+                    <div class="progress-percentage" id="progress-text">0%</div>
+                </div>
+            </div>
+
+            <div id="categories"></div>
+
+            <footer>
+                <div class="footer-content">
+                    <div>FOUNDING MEMBERS: K&&W</div>
+                    <div>LOCATION: TOSTINO, KARLSRUHE [49.0069° N, 8.4037° E]</div>
+                    <div>DATE: 24.07.25</div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Achievement notification -->
+    <div class="achievement" id="achievement"></div>
+
+    <script>
+        // Task data structure
+        const taskData = {
+            'identity': {
+                title: '👥 Identity & Setup',
+                tasks: [
+                    'Markenname final bestätigt (IYKYK)',
+                    'Domain sichern (iykyk.xyz, .studio, .co etc.)',
+                    'Handle sichern auf Instagram',
+                    'Handle sichern auf TikTok',
+                    'Handle sichern auf Twitter/X',
+                    'Handle sichern auf Pinterest, Threads (Optional)',
+                    'E-Mail-Adresse anlegen (z. B. hello@iykyk.xyz)',
+                    'Passwort-Safe/Tool einrichten',
+                    'Impressum-Template für DE'
+                ]
+            },
+            'brand': {
+                title: '🧠 Brand & Vision',
+                tasks: [
+                    'Elevator Pitch formulieren',
+                    'Moodboard (visuell + tonal)',
+                    'Zielgruppe definieren',
+                    'Inspirationsquellen/Brands analysieren',
+                    'Core Values und Do\'s & Don\'ts formulieren'
+                ]
+            },
+            'design': {
+                title: '🎨 Design & Identity',
+                tasks: [
+                    'Logo-Stilrichtung festlegen',
+                    '1–2 erste Logo-Entwürfe',
+                    'Farbpalette & Typografie auswählen',
+                    'Favicon, Social Icons + Mini Visual Kit',
+                    'Design-Tool-Setup (Figma, Canva, Adobe)'
+                ]
+            },
+            'product': {
+                title: '👕 Produkt & Klamotten',
+                tasks: [
+                    'Klamottentypen festlegen',
+                    'Moodboard für Schnitte, Stoffe, Passform',
+                    'Blanks recherchieren',
+                    'Entscheidung: On-Demand vs. Vorproduktion',
+                    'Kontakte zu Druckereien oder Dropshipping'
+                ]
+            },
+            'web': {
+                title: '🌐 Web & Tech',
+                tasks: [
+                    'Landing Page bauen',
+                    'Basic Mail-Collector einrichten',
+                    'Plattform wählen (Shopify vs. Webflow)',
+                    'Domain connecten & SSL aktivieren',
+                    'Analytics & Tracking (optional)',
+                    'MediaKit/Presskit erstellen'
+                ]
+            },
+            'marketing': {
+                title: '📣 Marketing',
+                tasks: [
+                    'Erste Slogans und Headlines',
+                    'Content Moodboard erstellen',
+                    'Content-Kalender aufsetzen',
+                    'Launch-Mailingliste einrichten',
+                    'Freunde/Follower vorab einweihen',
+                    '3–5 Core-Content-Formate definieren'
+                ]
+            },
+            'org': {
+                title: '📦 Organisation',
+                tasks: [
+                    'Gemeinsamer Ordner einrichten',
+                    'Verantwortlichkeiten klären',
+                    'Ideenspeicher einrichten',
+                    'To-Do-Tool aufsetzen',
+                    'Rechtliches klären (Kleinunternehmer/GbR)'
+                ]
+            }
+        };
+
+        // Supportive messages for task completion
+        const supportiveMessages = [
+            "💫 ONE STEP CLOSER TO YOUR VISION!",
+            "🔥 KEEP THE MOMENTUM GOING!",
+            "✨ PROGRESS IS PROGRESS!",
+            "🚀 BUILDING SOMETHING AMAZING!",
+            "💪 EVERY TASK COUNTS!"
+        ];
+
+        // State management
+        let completedTasks = JSON.parse(localStorage.getItem('iykyk-tasks') || '{}');
+        
+        // Initialize the app
+        function init() {
+            renderCategories();
+            updateProgress();
+            
+            // Add touch event handling for mobile
+            if ('ontouchstart' in window) {
+                document.addEventListener('touchstart', function() {}, {passive: true});
+            }
+        }
+
+        // Render all categories
+        function renderCategories() {
+            const container = document.getElementById('categories');
+            container.innerHTML = '';
+
+            Object.entries(taskData).forEach(([categoryId, category]) => {
+                const categoryEl = createCategoryElement(categoryId, category);
+                container.appendChild(categoryEl);
+            });
+        }
+
+        // Create category element
+        function createCategoryElement(categoryId, category) {
+            const div = document.createElement('div');
+            div.className = 'category';
+            div.dataset.category = categoryId;
+
+            const completedCount = category.tasks.filter((_, index) => 
+                completedTasks[`${categoryId}-${index}`]
+            ).length;
+
+            // Truncate long titles on mobile
+            const titleText = window.innerWidth < 400 ? 
+                category.title.substring(0, 20) + (category.title.length > 20 ? '...' : '') : 
+                category.title;
+
+            div.innerHTML = `
+                <div class="category-header" onclick="toggleCategory('${categoryId}')">
+                    <div class="category-title">
+                        <span class="expand-indicator">▶</span>
+                        <span class="category-icon">${category.title.split(' ')[0]}</span>
+                        <span class="category-title-text">${titleText.split(' ').slice(1).join(' ')}</span>
+                    </div>
+                    <div class="category-progress">${completedCount}/${category.tasks.length}</div>
+                </div>
+                <div class="tasks">
+                    ${category.tasks.map((task, index) => `
+                        <div class="task ${completedTasks[`${categoryId}-${index}`] ? 'completed' : ''}" 
+                             onclick="toggleTask('${categoryId}', ${index}, event)">
+                            <div class="checkbox"></div>
+                            <div class="task-text">${task}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            return div;
+        }
+
+        // Toggle category expansion
+        function toggleCategory(categoryId) {
+            const category = document.querySelector(`[data-category="${categoryId}"]`);
+            const wasExpanded = category.classList.contains('expanded');
+            
+            // Close all other categories on mobile
+            if (window.innerWidth < 768) {
+                document.querySelectorAll('.category').forEach(cat => {
+                    if (cat !== category) {
+                        cat.classList.remove('expanded');
+                    }
+                });
+            }
+            
+            category.classList.toggle('expanded');
+            
+            // Scroll to category on mobile when opening
+            if (!wasExpanded && window.innerWidth < 768) {
+                setTimeout(() => {
+                    category.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+        }
+
+        // Toggle task completion
+        function toggleTask(categoryId, taskIndex, event) {
+            event.stopPropagation();
+            
+            const taskId = `${categoryId}-${taskIndex}`;
+            const wasCompleted = completedTasks[taskId];
+            completedTasks[taskId] = !completedTasks[taskId];
+            
+            localStorage.setItem('iykyk-tasks', JSON.stringify(completedTasks));
+            
+            // Haptic feedback on mobile if available
+            if (window.navigator && window.navigator.vibrate) {
+                window.navigator.vibrate(10);
+            }
+            
+            renderCategories();
+            updateProgress();
+            
+            // Keep category expanded after task toggle
+            const category = document.querySelector(`[data-category="${categoryId}"]`);
+            category.classList.add('expanded');
+            
+            // Check for achievements and show supportive messages
+            if (!wasCompleted && completedTasks[taskId]) {
+                checkAchievements();
+            }
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            const totalTasks = Object.values(taskData).reduce((sum, cat) => sum + cat.tasks.length, 0);
+            const completedCount = Object.keys(completedTasks).filter(key => completedTasks[key]).length;
+            const percentage = Math.round((completedCount / totalTasks) * 100);
+
+            document.getElementById('main-progress').style.width = `${percentage}%`;
+            document.getElementById('progress-text').textContent = `${percentage}%`;
+            document.getElementById('task-count').textContent = `${completedCount} / ${totalTasks} DONE`;
+            
+            // Update text color based on progress
+            const progressText = document.getElementById('progress-text');
+            if (percentage > 50) {
+                progressText.classList.add('light-text');
+            } else {
+                progressText.classList.remove('light-text');
+            }
+        }
+
+        // Achievement system
+        let lastAchievementPercentage = 0;
+        let lastCompletedCount = Object.keys(completedTasks).filter(key => completedTasks[key]).length;
+        
+        function checkAchievements() {
+            const totalTasks = Object.values(taskData).reduce((sum, cat) => sum + cat.tasks.length, 0);
+            const completedCount = Object.keys(completedTasks).filter(key => completedTasks[key]).length;
+            const percentage = Math.round((completedCount / totalTasks) * 100);
+
+            let achievement = null;
+
+            // Milestone achievements
+            if (percentage === 100 && lastAchievementPercentage < 100) {
+                achievement = "🎉 MISSION COMPLETE! IYKYK IS READY!";
+            } else if (percentage >= 75 && lastAchievementPercentage < 75) {
+                achievement = "💪 75% DONE! ALMOST THERE!";
+            } else if (percentage >= 50 && lastAchievementPercentage < 50) {
+                achievement = "🔥 HALFWAY THERE! KEEP GOING!";
+            } else if (percentage >= 25 && lastAchievementPercentage < 25) {
+                achievement = "🚀 25% PROGRESS! MOMENTUM!";
+            } else if (completedCount === 1 && lastCompletedCount === 0) {
+                achievement = "✨ FIRST TASK DONE! LET'S GO!";
+            } else if (completedCount > lastCompletedCount) {
+                // Random supportive message for other completions
+                achievement = supportiveMessages[Math.floor(Math.random() * supportiveMessages.length)];
+            }
+
+            lastAchievementPercentage = percentage;
+            lastCompletedCount = completedCount;
+
+            if (achievement) {
+                showAchievement(achievement);
+            }
+        }
+
+        // Show achievement notification
+        function showAchievement(text) {
+            const achievementEl = document.getElementById('achievement');
+            achievementEl.textContent = text;
+            achievementEl.classList.add('show');
+            
+            // Haptic feedback for achievements
+            if (window.navigator && window.navigator.vibrate) {
+                window.navigator.vibrate([50, 30, 50]);
+            }
+            
+            setTimeout(() => {
+                achievementEl.classList.remove('show');
+            }, 3000);
+        }
+
+        // Handle resize events
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                renderCategories();
+            }, 250);
+        });
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
